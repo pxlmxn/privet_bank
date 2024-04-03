@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import base64
 from io import BytesIO
 import xmltodict
-from datetime import datetime
+import datetime
 
 def main(request):
     #Ключевая ставка
@@ -19,17 +19,46 @@ def main(request):
         cbr_daily = xmltodict.parse(response.text)
         return cbr_daily['soap:Envelope']['soap:Body']['AllDataInfoXMLResponse']['AllDataInfoXMLResult']['AllData']['KEY_RATE']
 
-    #График акции
-    def get_stock_data():
+    #Обработка формы акций
+    def get_form_data():
+        if request.method == 'GET':
+            if request.GET.get('startDate'):
+                start_date = request.GET.get('startDate')
+                end_date = request.GET.get('endDate')
+            else:
+                start_date = '2024-01-01'
+                end_date = datetime.date.today().strftime('%Y-%m-%d')
+            stock_dates = [start_date, end_date]
+            return stock_dates
+    #Сборка данных об акциях
+    def get_stock_data(stock_dates):
         ticker = 'YNDX'
-        startDate = '2024-03-01'
-        finalDate = '2024-04-01'
+        startDate = stock_dates[0]
+        finalDate = stock_dates[1]
         interval = '24'
-        j = requests.get('http://iss.moex.com/iss/engines/stock/markets/shares/securities/' + ticker + '/candles.json?from=' + startDate + '&till=' + finalDate + '&interval=' + interval).json()
-        data = [{k : r[i] for i, k in enumerate(j['candles']['columns'])} for r in j['candles']['data']]
-        frame = pd.DataFrame(data)
-        return frame.drop(columns=['open', 'high', 'low', 'value', 'volume', 'begin'])
+        try:
+            j = requests.get('http://iss.moex.com/iss/engines/stock/markets/shares/securities/' + ticker + '/candles.json?from=' + startDate + '&till=' + finalDate + '&interval=' + interval).json()
+            data = [{k : r[i] for i, k in enumerate(j['candles']['columns'])} for r in j['candles']['data']]
+            stock_data = pd.DataFrame(data)
+            stock_data = stock_data.drop(columns=['open', 'high', 'low', 'value', 'volume', 'begin'])
+            dates = {}
+            dates['end'] = []
+            for date in stock_data['end']:
+                dates['end'].append(date[:10])
+            stock_data['end'] = dates['end']
+        except:
+            j = requests.get('http://iss.moex.com/iss/engines/stock/markets/shares/securities/' + ticker + '/candles.json?from=' + startDate + '&till=' + finalDate + '&interval=' + interval).json()
+            data = [{k : r[i] for i, k in enumerate(j['candles']['columns'])} for r in j['candles']['data']]
+            stock_data = pd.DataFrame(data)
+            stock_data = stock_data.drop(columns=['open', 'high', 'low', 'value', 'volume', 'begin'])
+            dates = {}
+            dates['end'] = []
+            for date in stock_data['end']:
+                dates['end'].append(date[:10])
+            stock_data['end'] = dates['end']
+        return stock_data
 
+    #График акции
     def get_graph_svg():
         buffer = BytesIO()
         plt.savefig(buffer, format='svg')
@@ -51,18 +80,21 @@ def main(request):
         return graph
 
     #Курсы валют
+    main_valutes = ['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'BYN']
     def get_courses():
         course = []
-        resp = requests.get('https://www.cbr.ru/scripts/XML_daily.asp?date_req=02/04/2024')
-        resp_parsed = xmltodict.parse(resp.text)
-        valutes = resp_parsed['ValCurs']['Valute']
-        for valute in valutes:
-            course.append(valute['CharCode'] + ': ' + valute['Value'])
+        try:
+            resp = requests.get('https://www.cbr.ru/scripts/XML_daily.asp?date_req=02/04/2024')
+            resp_parsed = xmltodict.parse(resp.text)
+            valutes = resp_parsed['ValCurs']['Valute']
+            for valute in valutes:
+                if valute['CharCode'] in main_valutes:
+                    course.append(valute['CharCode'] + ': ' + valute['Value'][:-2])
+        except:
+            course = 'Курс валют временно недоступен.'
         return course
-    
 
     key_rate = get_key_rate()
-    graphic = get_plot_svg(get_stock_data())
+    graphic = get_plot_svg(get_stock_data(get_form_data()))
     course = get_courses()
-
     return render(request, 'main.html', context={'key_rate_date': key_rate['@date'], 'key_rate_value': key_rate['@val'], 'graphic': graphic, "course": course})
