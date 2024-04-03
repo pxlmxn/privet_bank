@@ -20,5 +20,6 @@ from bank_analyzer import views
 
 urlpatterns = [
     path('', views.main, name='main'),
+    path('valute/<str:id>', views.valute, name='valute'),
     path('admin/', admin.site.urls),
 ]

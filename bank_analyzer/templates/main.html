@@ -20,22 +20,26 @@
     </div>
     <div class="col-6 border p-2">
         <h4>Акции</h4>
-        {% if graphic %}
-            <img src="data:image/svg+xml;base64, {{graphic|safe}}" class="img-fluid">
-        {% endif %}
+        <canvas id="chart" height="200"></canvas>
         <form action="{% url 'main' %}" method="get" class="mt-3">
-            <select class="form-select">
-                <option selected>{{ticker}}</option>
-                <option value="1">FIVE</option>
-                <option value="2">VKCO</option>
-                <option value="3">SBER</option>
-            </select>
-            <select class="form-select">
-                <option selected>{{interval}}</option>
-                <option value="1">week</option>
-                <option value="2">month</option>
-                <option value="3">hour</option>
-            </select>
+            <div class="mb-3 mx-5">
+                <label class="form-label">Акция</label>
+                <select class="form-select" name="ticker">
+                    <option value="YNDX">YNDX</option>
+                    <option value="FIVE">FIVE</option>
+                    <option value="VKCO">VKCO</option>
+                    <option value="SBER">SBER</option>
+                </select>
+            </div>
+            <div class="mb-3 mx-5">
+                <label class="form-label">Интервал</label>
+                <select class="form-select" name="interval">
+                    <option value="60">Час</option>
+                    <option value="24">День</option>
+                    <option value="7">Неделя</option>
+                    <option value="31">Месяц</option>
+                </select>
+            </div>
             <div class="mb-3 mx-5">
                 <label for="exampleFormControlInput1" class="form-label">Начальная дата</label>
                 <input name="startDate" type="date" class="form-control" id="exampleFormControlInput1">
@@ -49,11 +53,38 @@
     </div>
 </div>
 
-
-<div class="row" style="text-align:center">
-    <h4 class="my-3">Курс валют</h4>
-    {% for valute in course %}
-    <span class="col">{{valute}}</span>
-    {% endfor %}
+<div class="row" style="text-align:center; margin-top: 30px">
+    <h4>Курс валют</h4>
+    <div class="row" style="text-align: center">
+        {% for key, value in course %}
+        <div class="col" style="margin: 20px">
+            <a style="text-decoration: none; color: blue" href="valute/{{key}}">{{ key }}: {{ value }} &#8381</a>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+<script>
+    let ctx = document.getElementById("chart").getContext("2d");
+    
+    let chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+         labels: "{{ stock_dates }}",
+         datasets: [
+            {
+              label: "Цена (₽)",
+              backgroundColor: "#79AEC8",
+              borderColor: "#417690",
+              data: "{{ stock_prices }}"
+            }
+         ]
+      },
+      options: {
+         title: {
+            text: "valute course",
+            display: false
+         }
+      }
+    });
+</script>
 {% endblock %}

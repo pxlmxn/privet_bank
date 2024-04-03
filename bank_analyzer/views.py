@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import pandas as pd
 import requests
 from matplotlib import pyplot as plt
@@ -28,14 +28,18 @@ def main(request):
             else:
                 start_date = '2024-01-01'
                 end_date = datetime.date.today().strftime('%Y-%m-%d')
-            stock_dates = [start_date, end_date]
-            return stock_dates
+            if request.GET.get('ticker'):
+                ticker = request.GET.get('ticker')
+            else:
+                ticker = 'YNDX'
+            if request.GET.get('interval'):
+                interval = request.GET.get('interval')
+            else:
+                interval = '24'
+            return(start_date, end_date, interval, ticker)
+        
     #Сборка данных об акциях
-    def get_stock_data(stock_dates):
-        ticker = 'YNDX'
-        startDate = stock_dates[0]
-        finalDate = stock_dates[1]
-        interval = '24'
+    def get_stock_data(startDate, finalDate, interval, ticker):
         try:
             j = requests.get('http://iss.moex.com/iss/engines/stock/markets/shares/securities/' + ticker + '/candles.json?from=' + startDate + '&till=' + finalDate + '&interval=' + interval).json()
             data = [{k : r[i] for i, k in enumerate(j['candles']['columns'])} for r in j['candles']['data']]
@@ -47,54 +51,33 @@ def main(request):
                 dates['end'].append(date[:10])
             stock_data['end'] = dates['end']
         except:
-            j = requests.get('http://iss.moex.com/iss/engines/stock/markets/shares/securities/' + ticker + '/candles.json?from=' + startDate + '&till=' + finalDate + '&interval=' + interval).json()
-            data = [{k : r[i] for i, k in enumerate(j['candles']['columns'])} for r in j['candles']['data']]
-            stock_data = pd.DataFrame(data)
-            stock_data = stock_data.drop(columns=['open', 'high', 'low', 'value', 'volume', 'begin'])
-            dates = {}
-            dates['end'] = []
-            for date in stock_data['end']:
-                dates['end'].append(date[:10])
-            stock_data['end'] = dates['end']
-        return stock_data
-
-    #График акции
-    def get_graph_svg():
-        buffer = BytesIO()
-        plt.savefig(buffer, format='svg')
-        buffer.seek(0)
-        image_svg = buffer.getvalue()
-        graph = base64.b64encode(image_svg)
-        graph = graph.decode('utf-8')
-        buffer.close()
-        return graph
-    
-    def get_plot_svg(frame):
-        plt.switch_backend('SVG')
-        plt.figure(figsize=(15, 6))
-        plt.plot(list(frame['end']), list(frame['close']))
-        plt.xlabel('Дата')
-        plt.ylabel('Стоимость, руб')
-        plt.xticks(rotation=70)
-        graph = get_graph_svg()
-        return graph
+            stock_data = None
+        stock_dates = stock_data['end'].tolist()
+        stock_prices = stock_data['close'].tolist()
+        return stock_dates, stock_prices
 
     #Курсы валют
     main_valutes = ['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'BYN']
     def get_courses():
-        course = []
+        course = {}
         try:
             resp = requests.get('https://www.cbr.ru/scripts/XML_daily.asp?date_req=02/04/2024')
             resp_parsed = xmltodict.parse(resp.text)
             valutes = resp_parsed['ValCurs']['Valute']
             for valute in valutes:
                 if valute['CharCode'] in main_valutes:
-                    course.append(valute['CharCode'] + ': ' + valute['Value'][:-2])
+                    course[valute['CharCode']] = valute['Value'][:-2]
         except:
             course = 'Курс валют временно недоступен.'
         return course
 
+    startDate, finalDate, interval, ticker = get_form_data()
+
     key_rate = get_key_rate()
-    graphic = get_plot_svg(get_stock_data(get_form_data()))
     course = get_courses()
-    return render(request, 'main.html', context={'key_rate_date': key_rate['@date'], 'key_rate_value': key_rate['@val'], 'graphic': graphic, "course": course})
+    stock_dates, stock_prices = get_stock_data(startDate, finalDate, interval, ticker)
+    
+    return render(request, 'main.html', context={'key_rate_date': key_rate['@date'], 'key_rate_value': key_rate['@val'], "course": course.items(), 'stock_dates': stock_dates, 'stock_prices': stock_prices})
+
+def valute(request, id):
+    return render(request, 'valute.html')
