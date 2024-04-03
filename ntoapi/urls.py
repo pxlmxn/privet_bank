@@ -20,6 +20,7 @@ from bank_analyzer import views
 
 urlpatterns = [
     path('', views.main, name='main'),
-    path('valute/<str:id>', views.valute, name='valute'),
+    path('valute', views.valute, name='valute'),
+    path('stock', views.stock, name='stock'),
     path('admin/', admin.site.urls),
 ]

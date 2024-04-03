@@ -19,6 +19,33 @@ def main(request):
         cbr_daily = xmltodict.parse(response.text)
         return cbr_daily['soap:Envelope']['soap:Body']['AllDataInfoXMLResponse']['AllDataInfoXMLResult']['AllData']['KEY_RATE']
 
+    #Курсы валют
+    main_valutes = ['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'BYN']
+    def get_courses():
+        course = {}
+        date = datetime.date.today().strftime('%d/%m/%Y')
+        try:
+            resp = requests.get(f'https://www.cbr.ru/scripts/XML_daily.asp?date_req={date}')
+            resp_parsed = xmltodict.parse(resp.text)
+            valutes = resp_parsed['ValCurs']['Valute']
+            for valute in valutes:
+                if valute['CharCode'] in main_valutes:
+                    course[valute['CharCode']] = valute['Value'][:-2]
+        except:
+            course = 'Курс валют временно недоступен.'
+        return course
+
+    key_rate = get_key_rate()
+    course = get_courses()
+    
+    return render(request, 'main.html', context={'key_rate_date': key_rate['@date'], 'key_rate_value': key_rate['@val'], "course": course.items()})
+
+def valute(request):
+    today = datetime.date.today().strftime('%Y-%m-%d')
+    return render(request, 'valute.html', context={'today': today})
+
+def stock(request):
+    today = datetime.date.today().strftime('%Y-%m-%d')
     #Обработка формы акций
     def get_form_data():
         if request.method == 'GET':
@@ -55,29 +82,9 @@ def main(request):
         stock_dates = stock_data['end'].tolist()
         stock_prices = stock_data['close'].tolist()
         return stock_dates, stock_prices
-
-    #Курсы валют
-    main_valutes = ['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'BYN']
-    def get_courses():
-        course = {}
-        try:
-            resp = requests.get('https://www.cbr.ru/scripts/XML_daily.asp?date_req=02/04/2024')
-            resp_parsed = xmltodict.parse(resp.text)
-            valutes = resp_parsed['ValCurs']['Valute']
-            for valute in valutes:
-                if valute['CharCode'] in main_valutes:
-                    course[valute['CharCode']] = valute['Value'][:-2]
-        except:
-            course = 'Курс валют временно недоступен.'
-        return course
-
+    
     startDate, finalDate, interval, ticker = get_form_data()
 
-    key_rate = get_key_rate()
-    course = get_courses()
     stock_dates, stock_prices = get_stock_data(startDate, finalDate, interval, ticker)
-    
-    return render(request, 'main.html', context={'key_rate_date': key_rate['@date'], 'key_rate_value': key_rate['@val'], "course": course.items(), 'stock_dates': stock_dates, 'stock_prices': stock_prices})
 
-def valute(request, id):
-    return render(request, 'valute.html')
+    return render(request, 'stock.html', context={'stock_dates': stock_dates, 'stock_prices': stock_prices, 'today': today})

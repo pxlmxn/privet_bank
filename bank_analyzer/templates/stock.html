@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block valute %}
+<div class="row">
+    <div class="col-4 border">
+        <form action="{% url 'stock' %}" method="get" class="mt-3">
+            <div class="mb-3 mx-5">
+                <label class="form-label">Акция</label>
+                <select class="form-select" name="ticker">
+                    <option value="YNDX">YNDX</option>
+                    <option value="FIVE">FIVE</option>
+                    <option value="VKCO">VKCO</option>
+                    <option value="SBER">SBER</option>
+                </select>
+            </div>
+            <div class="mb-3 mx-5">
+                <label class="form-label">Интервал</label>
+                <select class="form-select" name="interval">
+                    <option value="60">Час</option>
+                    <option value="24">День</option>
+                    <option value="7">Неделя</option>
+                    <option value="31">Месяц</option>
+                </select>
+            </div>
+            <div class="mb-3 mx-5">
+                <label for="exampleFormControlInput1" class="form-label">Начальная дата</label>
+                <input name="startDate" type="date" class="form-control" id="exampleFormControlInput1" max="{{ today }}">
+            </div>
+            <div class="mb-3 mx-5">
+                <label for="exampleFormControlInput1" class="form-label">Финальная дата</label>
+                <input name="endDate" type="date" class="form-control" id="exampleFormControlInput1" max="{{ today }}">
+            </div>
+            <button type="submit" class="btn btn-primary mb-3">Submit</button>
+        </form>
+    </div>
+    <div class="col-8 border">
+        <canvas class="mt-2" id="chart" height="200"></canvas>
+    </div>
+</div>
+<script>
+    let ctx = document.getElementById("chart").getContext("2d");
+    
+    let chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+         labels: [{% for dt in stock_dates %}"{{ dt }}",{% endfor %}],
+         datasets: [
+            {
+              label: "Цена (₽)",
+              backgroundColor: "#79AEC8",
+              borderColor: "#417690",
+              data: {{ stock_prices }}
+            }
+         ]
+      },
+      options: {
+         title: {
+            text: "valute course",
+            display: true
+         }
+      }
+    });
+</script>
+{% endblock %}
