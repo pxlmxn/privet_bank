@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main %}
+<div class="row" style="text-align:center">
+    <div class="col-3 border rounded-4 p-2">
+        <h4>Ставка ЦБ РФ</h4>
+        <p>16,00</p>
+    </div>
+    <div class="col-6 border rounded-4 p-2">
+        <h4>Акции</h4>
+        <form action="{% url 'main' %}" method="get">
+            <select class="form-select">
+                <option selected>{{ticker}}</option>
+                <option value="1">FIVE</option>
+                <option value="2">VKCO</option>
+                <option value="3">SBER</option>
+            </select>
+            <select class="form-select">
+                <option selected>{{interval}}</option>
+                <option value="1">week</option>
+                <option value="2">month</option>
+                <option value="3">hour</option>
+            </select>
+        </form>
+        {% if graphic %}
+            <img src="data:image/svg+xml;base64, {{graphic|safe}}" class="img-fluid">
+        {% endif %}
+    </div>
+    <div class="col-3 border rounded-4 p-2">
+        <h4>Объём операций, доходность, рентабельность</h4>
+    </div>
+</div>
+
+
+<div class="row" style="text-align:center">
+    <h4>Курс валют</h4>
+    {% for valute in course %}
+    {{valute}}
+    <br>
+    {% endfor %}
+</div>
+{% endblock %}
