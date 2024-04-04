@@ -4,7 +4,8 @@
 {% block loan %}
 <h4 style="text-align:center; margin:20px">Заполните форму, чтобы узнать, можно ли Вам получить кредит в нашем банке.</h4>
 <div class="d-flex justify-content-center">
-    <form class="card rounded-4 p-4 m-2 container" style="font-size:20px">
+    <form class="card rounded-4 p-4 m-2 container" style="font-size:20px" method="POST" action="{% url 'loan' %}">
+        {% csrf_token %}
         <div class="row">
             <div class="col">
                 <div class="form-check">
@@ -28,17 +29,8 @@
                 </div>
     
                 <div class="" style="margin-bottom:15px">
-                    <label for="kids" class="form-label"><h6 style="font-size:20px">Место жительства</h6></label>
-                    <select id="kids" class="form-select" aria-label="Default select example"required>
-                        <option value="В городе">В городе</option>
-                        <option value="В пригороде">В пригороде</option>
-                        <option value="За городом">За городом</option>
-                    </select>
-                </div>
-    
-                <div class="" style="margin-bottom:15px">
                     <label for="kids" class="form-label"><h6 style="font-size:20px">Лица на иждевении</h6></label>
-                    <select id="kids" class="form-select" aria-label="Default select example"required>
+                    <select id="kids" class="form-select" aria-label="Default select example"required name="kids">
                         <option value="Нет">Нет</option>
                         <option value="1 - 3">1 - 3</option>
                         <option value="> 3"> > 3</option>
@@ -54,32 +46,33 @@
                     <input type="radio" class="form-check-input" id="validationFormCheck3" name="self-employed" required>
                     <label class="form-check-label" for="validationFormCheck3">Нет</label>
                 </div>
-            </div>
-    
-            <div class="col">
+
                 <div class="" style="margin-bottom:15px">
                     <label for="kids" class="form-label"><h6 style="font-size:20px">Высшее образование</h6></label>
-                    <select id="kids" class="form-select" aria-label="Default select example"required>
+                    <select id="kids" class="form-select" aria-label="Default select example"required name="education">
                         <option value="Нет">Нет</option>
                         <option value="Получаю">Получаю</option>
                         <option value="Есть">Есть</option>
                     </select>
                 </div>
+            </div>
     
-                <div class="" style="margin-bottom:15px">
-                    <label for="income" class="form-label"><h6 style="font-size:20px">Доход (&#8381)</h6></label>
-                        <p style="font-size:15px">Включает зарабную плату, а также акции, сдача квартиры в аренду и другие виды доходов.</p>
-                    <input type="text" class="form-control" id="income" aria-describedby="incomeFeedback" required>
+            <div class="col">
+                <div class="">
+                    <label for="income" class="form-label">
+                    <h6 style="font-size:20px">Доход (&#8381)</h6></label>
+                    <p style="font-size:15px">Включает зарабную плату, а также акции, сдача квартиры в аренду и другие виды доходов.</p>
+                    <input type="text" name="income" class="form-control" id="income" aria-describedby="incomeFeedback" required>
                 </div>
     
                 <div>
                     <label for="loan" class="form-label"><h6 style="font-size:20px">Сумма займа (&#8381)</h6></label>
-                    <input type="text" class="form-control" id="loan" aria-describedby="validationServer03Feedback" required>
+                    <input type="text" name="loan" class="form-control" id="loan" aria-describedby="validationServer03Feedback" required>
                 </div>
         
                 <div class="" style="margin-bottom:15px">
                     <label for="kids" class="form-label"><h6 style="font-size:20px">Срок займа</h6></label>
-                    <select id="kids" class="form-select" aria-label="Default select example"required>
+                    <select id="kids" class="form-select" aria-label="Default select example"required name="date_loan">
                         <option value="240">240</option>
                         <option value="360">360</option>
                         <option value="480">480</option>
@@ -88,12 +81,21 @@
         
                 <div class="form-check">
                     <h6 style="font-size:20px">Сейчас уже есть кредиты</h6>
-                    <input type="radio" class="form-check-input" id="validationFormCheck2" name="radio-stacked" required>
+                    <input type="radio" class="form-check-input" id="validationFormCheck2" name="isLoan" required>
                     <label class="form-check-label" for="validationFormCheck2">Да</label>
                 </div>
                 <div class="form-check mb-3">
-                    <input type="radio" class="form-check-input" id="validationFormCheck3" name="radio-stacked" required>
+                    <input type="radio" class="form-check-input" id="validationFormCheck3" name="isLoan" required>
                     <label class="form-check-label" for="validationFormCheck3">Нет</label>
+                </div>
+
+                <div class="" style="margin-bottom:15px">
+                    <label for="kids" class="form-label"><h6 style="font-size:20px">Место жительства</h6></label>
+                    <select id="kids" class="form-select" aria-label="Default select example"required name="place">
+                        <option value="В городе">В городе</option>
+                        <option value="В пригороде">В пригороде</option>
+                        <option value="За городом">За городом</option>
+                    </select>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Узнать</button>

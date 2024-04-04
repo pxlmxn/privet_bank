@@ -6,6 +6,7 @@ import requests
 import xmltodict
 import datetime
 from .models import Transaction
+import json
 
 def main(request):
     today = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -171,29 +172,63 @@ def stock(request):
     return render(request, 'stock.html', context={'stock_dates': stock_dates, 'stock_prices': stock_prices, 'today': today})
 
 def loan(request):
+    if request.method == 'POST':
+        gender = request.POST.get('gender')
+        isMarried = request.POST.get('isMarried')
+        place = request.POST.get('place')
+        kids = request.POST.get('kids')
+        self_employed = request.POST.get('self-employed')
+        education = request.POST.get('education')
+        income = request.POST.get('income')
+        loan = request.POST.get('loan')
+        date_loan = request.POST.get('date_loan')
+        isLoan = request.POST.get('isLoan')
     return render(request, 'loan.html')
 
-class CardOperation(View):
+class CardTransaction(View):
     def get(self, request):
-        transactions = {}
+        json = {}
         all_transactions = Transaction.objects.all()
         for transaction in all_transactions:
-            transactions[transaction.shop] = transaction.amount
-        return JsonResponse({"status": 200, "transactions": transactions})
+            json[transaction.id] = {
+                'card_id': transaction.card_id,
+                'amount': transaction.amount,
+                'shop': transaction.shop,
+                'date': transaction.dt,
+            }
+        return JsonResponse({"status": 200, "transactions": json})
     
     def post(self, request):
-        card_id = int(request.POST.get('card_id'))
-        amount = int(request.POST.get('amount'))
-        shop = request.POST.get('shop')
-        Transaction.objects.create(
-            card_id = card_id,
-            amount = amount,
-            shop = shop
-        )
-        return JsonResponse({"status": 200})
+        try:
+            json_body = json.loads(request.body)
+            Transaction.objects.create(
+                card_id = json_body.get('card_id'),
+                amount = json_body.get('amount'),
+                shop = json_body.get('shop'),
+                dt = datetime.datetime.now()
+            )
+            return JsonResponse({"status": 200})
+        except:
+            return JsonResponse({"status": 400})
 
-    def patch(self, request):
-        return JsonResponse({"status": 200, "message": "patch запрос"})
+class SingleCardTransaction(View):
+    def patch(self, request, id):
+        try:
+            json_body = json.loads(request.body)
+            transaction = Transaction.objects.get(id=id)
+            transaction.card_id = json_body['card_id']
+            transaction.amount = json_body['amount']
+            transaction.shop = json_body['shop']
+            transaction.dt = json_body['dt']
+            transaction.save()
+            return JsonResponse({"status": 200})
+        except:
+            return JsonResponse({"status": 400})
 
-    def delete(self, request):
-        return JsonResponse({"status": 200, "message": "delete запрос"})
+    def delete(self, request, id):
+        try:
+            transaction = Transaction.objects.get(id=id)
+            transaction.delete()
+            return JsonResponse({"status": 200})
+        except:
+            return JsonResponse({"status": 400})
