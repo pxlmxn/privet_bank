@@ -4,7 +4,7 @@
 {% block valute %}
 <div class="row">
     <div class="col-4 border">
-        <form class="justify-content-center mt-2">
+        <form action="{% url 'valute' %}" method="GET" class="mt-2">
             <div class="mb-3 mx-5">
                 <label class="form-label">Валюта</label>
                 <select class="form-select" aria-label="Default select example">
@@ -21,7 +21,7 @@
                 <label for="exampleFormControlInput1" class="form-label">Финальная дата</label>
                 <input name="endDate" type="date" class="form-control" id="exampleFormControlInput1">
             </div>
-            <button type="submit" class="btn btn-primary mb-3">Submit</button>
+            <button type="submit" class="btn btn-primary mb-3 col">Submit</button>
         </form>
     </div>
     <div class="col-8 border">
@@ -34,13 +34,13 @@
     let chart = new Chart(ctx, {
       type: "bar",
       data: {
-         labels: ["2020/Q1", "2020/Q2", "2020/Q3", "2020/Q4"],
+         labels: [{% for dt in dates %}"{{ dt }}",{% endfor %}],
          datasets: [
             {
               label: "Цена (₽)",
               backgroundColor: "#79AEC8",
               borderColor: "#417690",
-              data: [26900, 28700, 27300, 29200]
+              data: [{% for val in rates %}"{{ val }}",{% endfor %}]
             }
          ]
       },

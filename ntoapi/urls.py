@@ -22,5 +22,6 @@ urlpatterns = [
     path('', views.main, name='main'),
     path('valute', views.valute, name='valute'),
     path('stock', views.stock, name='stock'),
+    path('loan', views.loan, name='loan'),
     path('admin/', admin.site.urls),
 ]
