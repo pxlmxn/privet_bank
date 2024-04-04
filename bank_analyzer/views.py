@@ -7,6 +7,9 @@ import xmltodict
 import datetime
 from .models import Transaction
 import json
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import preprocessing
 
 def main(request):
     today = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -173,16 +176,54 @@ def stock(request):
 
 def loan(request):
     if request.method == 'POST':
-        gender = request.POST.get('gender')
-        isMarried = request.POST.get('isMarried')
-        place = request.POST.get('place')
-        kids = request.POST.get('kids')
-        self_employed = request.POST.get('self-employed')
-        education = request.POST.get('education')
-        income = request.POST.get('income')
-        loan = request.POST.get('loan')
-        date_loan = request.POST.get('date_loan')
-        isLoan = request.POST.get('isLoan')
+        Gender = request.POST.get('gender')
+        Married = request.POST.get('isMarried')
+        Dependents = request.POST.get('kids')
+        Education = request.POST.get('education')
+        Self_employed = request.POST.get('self-employed')
+        Applicant_Income = int(request.POST.get('income'))
+        Coapplicant_Income = int(request.POST.get('income'))
+        Loan_Amount = int(request.POST.get('loan'))
+        Term = int(request.POST.get('date_loan'))
+        Credit_History = int(request.POST.get('isLoan'))
+        Area = request.POST.get('place')
+
+        df = pd.read_csv('../loan_train.csv')
+
+        df['Gender'] = df['Gender'].fillna('Male')
+        df['Married'] = df['Gender'].fillna('No')
+        df['Self_Employed'] = df['Self_Employed'].fillna('No')
+        df['Term'] = df['Term'].fillna(360)
+        df['Credit_History'] = df['Credit_History'].fillna(0)
+
+        label_encoder = preprocessing.LabelEncoder()
+
+        df['Gender']= label_encoder.fit_transform(df['Gender'])
+        df['Married']= label_encoder.fit_transform(df['Married'])
+        df['Education']= label_encoder.fit_transform(df['Education'])
+        df['Self_Employed']= label_encoder.fit_transform(df['Self_Employed'])
+        df['Area']= label_encoder.fit_transform(df['Area'])
+        df['Status']= label_encoder.fit_transform(df['Status'])
+        df['Dependents']= label_encoder.fit_transform(df['Dependents'])
+
+        y = df['Status']
+        x = df.drop(['Status'], axis=1)
+        x_training_data, x_test_data, y_training_data, y_test_data = train_test_split(x, y, test_size = 0.3)
+        model = KNeighborsClassifier(n_neighbors = 3)
+        model.fit(x_training_data, y_training_data)
+
+
+        data = [[Gender,Married,Dependents,Education,Self_employed,Applicant_Income,Coapplicant_Income,Loan_Amount,Term,Credit_History,Area]]
+        my_test = pd.DataFrame(data, columns=['Gender', 'Married', 'Dependents', 'Education', 'Self_Employed',
+               'Applicant_Income', 'Coapplicant_Income', 'Loan_Amount', 'Term','Credit_History', 'Area'])
+
+        test_predict = model.predict(my_test)
+        if test_predict[0] == 0:
+            context = {'success':False}
+            return render(request, 'loan.html', context=context)
+        else:
+            context = {'success':True}
+            return render(request, 'loan.html', context=context)
     return render(request, 'loan.html')
 
 class CardTransaction(View):
