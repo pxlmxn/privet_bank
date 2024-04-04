@@ -88,7 +88,7 @@ def main(request):
 
     course = get_courses()
     key_dates, key_rates = get_key_rate() 
-    stock_dates, stock_prices = get_stock_data("2024-01-01", datetime.date.today().strftime('%Y-%m-%d'), "24", "YNDX")
+    stock_dates, stock_prices = get_stock_data("2024-01-01", datetime.date.today().strftime('%Y-%m-%d'), "24", "SBER")
     
     return render(request, 'main.html', context={"course": course.items(), 'key_dates': key_dates, 'key_rates': key_rates, 'stock_dates': stock_dates, 'stock_prices': stock_prices, 'today': today})
 
@@ -126,7 +126,7 @@ def valute(request):
     for i in records:
         dates.append(i['@Date'])
         rates.append(float(i['VunitRate'].replace(',', '.')))
-    return render(request, 'valute.html', context={'today': today, 'dates': dates, 'rates': rates, 'all_valutes': all_valutes.items()})
+    return render(request, 'valute.html', context={'today': today, 'dates': dates, 'rates': rates, 'all_valutes': all_valutes.items(), 'currency_name': all_valutes[id]})
 
 def stock(request):
     today = datetime.date.today().strftime('%Y-%m-%d')
@@ -172,7 +172,7 @@ def stock(request):
 
     stock_dates, stock_prices = get_stock_data(startDate, finalDate, interval, ticker)
 
-    return render(request, 'stock.html', context={'stock_dates': stock_dates, 'stock_prices': stock_prices, 'today': today})
+    return render(request, 'stock.html', context={'stock_dates': stock_dates, 'stock_prices': stock_prices, 'today': today, 'ticker': ticker})
 
 def loan(request):
     if request.method == 'POST':
@@ -188,7 +188,7 @@ def loan(request):
         Credit_History = int(request.POST.get('isLoan'))
         Area = request.POST.get('place')
 
-        df = pd.read_csv('../loan_train.csv')
+        df = pd.read_csv('loan_train.csv')
 
         df['Gender'] = df['Gender'].fillna('Male')
         df['Married'] = df['Gender'].fillna('No')
