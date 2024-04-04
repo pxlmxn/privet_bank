@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 import pandas as pd
 import requests
 import xmltodict
 import datetime
+from .models import Transaction
 
 def main(request):
     today = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -174,10 +175,22 @@ def loan(request):
 
 class CardOperation(View):
     def get(self, request):
-        return JsonResponse({"status": 200, "message": "get запрос"})
-
+        transactions = {}
+        all_transactions = Transaction.objects.all()
+        for transaction in all_transactions:
+            transactions[transaction.shop] = transaction.amount
+        return JsonResponse({"status": 200, "transactions": transactions})
+    
     def post(self, request):
-        return JsonResponse({"status": 200, "message": "post запрос"})
+        card_id = int(request.POST.get('card_id'))
+        amount = int(request.POST.get('amount'))
+        shop = request.POST.get('shop')
+        Transaction.objects.create(
+            card_id = card_id,
+            amount = amount,
+            shop = shop
+        )
+        return JsonResponse({"status": 200})
 
     def patch(self, request):
         return JsonResponse({"status": 200, "message": "patch запрос"})
