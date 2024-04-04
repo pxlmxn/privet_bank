@@ -2,29 +2,7 @@
 {% load static %}
 
 {% block main %}
-<div class="row" style="text-align:center">
-    <div class="col-6 border p-2">
-        <h4>Ставка ЦБ РФ</h4>
-        <canvas id="key_rate_graph" height="100"></canvas>
-        <form action="{% url 'main' %}" method="GET" class="mt-3">
-            <div class="mb-3 mx-5">
-                <label for="exampleFormControlInput1" class="form-label">Начальная дата</label>
-                <input type="date" class="form-control" id="exampleFormControlInput1">
-            </div>
-            <div class="mb-3 mx-5">
-                <label for="exampleFormControlInput1" class="form-label">Финальная дата</label>
-                <input type="date" class="form-control" id="exampleFormControlInput1">
-            </div>
-            <button type="submit" class="btn btn-primary mb-3">Submit</button>
-        </form>
-    </div>
-    <div class="col-6 border p-2">
-        <h4>Акции</h4>
-        <canvas id="stock_graph" height="200"></canvas>
-    </div>
-</div>
-
-<div class="row" style="text-align:center; margin-top: 30px">
+<div class="row" style="text-align:center; margin-top: 10px">
     <h4>Курс валют</h4>
     <div class="row" style="text-align: center">
         {% for key, value in course %}
@@ -34,11 +12,36 @@
         {% endfor %}
     </div>
 </div>
+
+<div class="row" style="text-align:center">
+    <div class="col-6 border p-2">
+        <h4>Ставка ЦБ РФ</h4>
+        <canvas id="key_rate_graph" height="125"></canvas>
+        <form action="{% url 'main' %}" method="POST" class="mt-3">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center">
+                <div class="mb-3 mx-5">
+                    <label for="exampleFormControlInput1" class="form-label">Начальная дата</label>
+                    <input type="date" class="form-control" id="exampleFormControlInput1" name="start_date" max="{{ today }}">
+                </div>
+                <div class="mb-3 mx-5">
+                    <label for="exampleFormControlInput1" class="form-label">Финальная дата</label>
+                    <input type="date" class="form-control" id="exampleFormControlInput1" name="end_date" max="{{ today }}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-2 mb-2">Построить график</button>
+        </form>
+    </div>
+    <div class="col-6 border p-2">
+        <h4>Акции</h4>
+        <canvas id="stock_graph" height="200"></canvas>
+    </div>
+</div>
 <script>
     let ctx = document.getElementById("stock_graph").getContext("2d");
     
     let stock_graph = new Chart(ctx, {
-      type: "bar",
+      type: "line",
       data: {
          labels: [{% for dt in stock_dates %}"{{ dt }}",{% endfor %}],
          datasets: [
@@ -62,7 +65,7 @@
     let ctx1 = document.getElementById("key_rate_graph").getContext("2d");
     
     let key_rate_graph = new Chart(ctx1, {
-      type: "bar",
+      type: "line",
       data: {
          labels: [{% for dt in key_dates %}"{{ dt }}",{% endfor %}],
          datasets: [
