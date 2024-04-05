@@ -236,7 +236,7 @@ class Transaction(View):
                 'card_id': transaction.card_id,
                 'amount': transaction.amount,
                 'shop': transaction.shop,
-                'date': transaction.dt,
+                'date': transaction.date,
             }
         return JsonResponse({"status": 200, "transactions": json})
     
@@ -247,7 +247,7 @@ class Transaction(View):
                 card_id = json_body.get('card_id'),
                 amount = json_body.get('amount'),
                 shop = json_body.get('shop'),
-                dt = datetime.datetime.now()
+                date = datetime.datetime.now()
             )
             return JsonResponse({"status": 200})
         except:
@@ -261,7 +261,7 @@ class TransactionWithId(View):
             transaction.card_id = json_body['card_id']
             transaction.amount = json_body['amount']
             transaction.shop = json_body['shop']
-            transaction.dt = json_body['dt']
+            transaction.date = json_body['date']
             transaction.save()
             return JsonResponse({"status": 200})
         except:
