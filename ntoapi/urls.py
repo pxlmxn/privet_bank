@@ -25,7 +25,7 @@ urlpatterns = [
     path('valute', views.valute, name='valute'),
     path('stock', views.stock, name='stock'),
     path('loan', views.loan, name='loan'),
-    path('card', views.CardTransaction.as_view()),
-    path('card/<int:id>', views.SingleCardTransaction.as_view()),
+    path('card', views.Transaction.as_view()),
+    path('card/<int:id>', views.TransactionWithId.as_view()),
     path('admin/', admin.site.urls),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

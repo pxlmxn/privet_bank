@@ -20,8 +20,10 @@ def main(request):
         key_end_date = datetime.datetime.now().strftime('%Y-%m-%d')
 
         if request.method == 'POST' and not request.POST.get('start_date', '') == request.POST.get('end_date', ''):
-            key_start_date = request.POST.get('start_date', '')
-            key_end_date = request.POST.get('end_date', '')
+            if request.POST.get('start_date', ''):
+                key_start_date = request.POST.get('start_date', '')
+            if request.POST.get('end_date', ''):
+                key_end_date = request.POST.get('end_date', '')
 
         url = "http://cbr.ru/DailyInfoWebServ/DailyInfo.asmx"
         data = f'''<?xml version=\"1.0\" encoding=\"utf-8\"?>\n
@@ -94,22 +96,21 @@ def main(request):
 
 def valute(request):
     today = datetime.date.today().strftime('%Y-%m-%d')
-
     all_valutes = {'R01010': 'Австралийский доллар', 'R01020A': 'Азербайджанский манат', 'R01035': 'Фунт стерлингов Соединенного королевства', 'R01060': 'Армянских драмов', 'R01090B': 'Белорусский рубль', 'R01100': 'Болгарский лев', 'R01115': 'Бразильский реал', 'R01135': 'Венгерских форинтов', 'R01150': 'Вьетнамских донгов', 'R01200': 'Гонконгский доллар', 'R01210': 'Грузинский лари', 'R01215': 'Датская крона', 'R01230': 'Дирхам ОАЭ', 'R01235': 'Доллар США', 'R01239': 'Евро', 'R01240': 'Египетских фунтов', 'R01270': 'Индийских рупий', 'R01280': 'Индонезийских рупий', 'R01335': 'Казахстанских тенге', 'R01350': 'Канадский доллар', 'R01355': 'Катарский риал', 'R01370': 'Киргизских сомов', 'R01375': 'Китайский юань', 'R01500': 'Молдавских леев', 'R01530': 'Новозеландский доллар', 'R01535': 'Норвежских крон', 'R01565': 'Польский злотый', 'R01585F': 'Румынский лей', 'R01589': 'СДР (специальные права заимствования)', 'R01625': 'Сингапурский доллар', 'R01670': 'Таджикских сомони', 'R01675': 'Таиландских батов', 'R01700J': 'Турецких лир', 'R01710A': 'Новый туркменский манат', 'R01717': 'Узбекских сумов', 'R01720': 'Украинских гривен', 'R01760': 'Чешских крон', 'R01770': 'Шведских крон', 'R01775': 'Швейцарский франк', 'R01805F': 'Сербских динаров', 'R01810': 'Южноафриканских рэндов', 'R01815': 'Вон Республики Корея', 'R01820': 'Японских иен'}
-    
+    id = "R01235"
+    start_date = '01/01/2024'
+    end_date = datetime.datetime.now().strftime('%d/%m/%Y')
+
     if request.method == 'POST':
         if not request.POST.get('startDate') == request.POST.get('endDate'):
-            start_date = request.POST.get('startDate')
-            start_date = start_date[8:] + '/' + start_date[5:7] + '/' + start_date[:4]
-            end_date = request.POST.get('endDate')
-            end_date = end_date[8:] + '/' + end_date[5:7] + '/' + end_date[:4]
-        else:
-            start_date = '01/01/2024'
-            end_date = datetime.datetime.now().strftime('%d/%m/%Y')
+            if request.POST.get('startDate'):
+                start_date = request.POST.get('startDate')
+                start_date = start_date[8:] + '/' + start_date[5:7] + '/' + start_date[:4]
+            if request.POST.get('endDate'):
+                end_date = request.POST.get('endDate')
+                end_date = end_date[8:] + '/' + end_date[5:7] + '/' + end_date[:4]
         if request.POST.get('id'):
             id = request.POST.get('id')
-        else:
-            id = "R01235"
 
     try:
         url = f"http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1={start_date}&date_req2={end_date}&VAL_NM_RQ={id}"
@@ -226,7 +227,7 @@ def loan(request):
             return render(request, 'loan.html', context=context)
     return render(request, 'loan.html')
 
-class CardTransaction(View):
+class Transaction(View):
     def get(self, request):
         json = {}
         all_transactions = Transaction.objects.all()
@@ -252,7 +253,7 @@ class CardTransaction(View):
         except:
             return JsonResponse({"status": 400})
 
-class SingleCardTransaction(View):
+class TransactionWithId(View):
     def patch(self, request, id):
         try:
             json_body = json.loads(request.body)
